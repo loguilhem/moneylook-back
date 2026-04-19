@@ -30,4 +30,3 @@ class Expense(Base):
 
     category = relationship("Category", back_populates="expenses")
     bank_account = relationship("BankAccount", back_populates="expenses")
-    recurring_expense = relationship("RecurringExpense", back_populates="generated_expenses")

@@ -1,6 +1,5 @@
-from datetime import date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import CheckConstraint, Date, Integer, String, ForeignKey
+from sqlalchemy import Boolean, CheckConstraint, Integer, String, ForeignKey
 from app.core.database import Base
 
 
@@ -11,20 +10,27 @@ class RecurringExpense(Base):
             "frequency IN ('weekly', 'monthly', 'yearly')",
             name="ck_recurring_expenses_frequency",
         ),
+        CheckConstraint(
+            "date_policy IN ('same_day', 'last_day_of_month', 'first_business_day', 'last_business_day')",
+            name="ck_recurring_expenses_date_policy",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
     label: Mapped[str] = mapped_column(String(255), nullable=False)
     amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
-
-    start_date: Mapped[date] = mapped_column(Date, nullable=False)
-    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    date_policy: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="same_day",
+    )
 
     frequency: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
-        default="mensuel",
+        default="monthly",
     )
 
     category_id: Mapped[int] = mapped_column(
@@ -39,8 +45,3 @@ class RecurringExpense(Base):
 
     category = relationship("Category", back_populates="recurring_expenses")
     bank_account = relationship("BankAccount", back_populates="recurring_expenses")
-
-    generated_expenses = relationship(
-        "Expense",
-        back_populates="recurring_expense"
-    )

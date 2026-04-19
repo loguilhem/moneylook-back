@@ -36,8 +36,6 @@ def init_db() -> None:
     ensure_column("expenses", "recurring_expense_id")
     normalize_frequency_values("recurring_expenses")
     normalize_frequency_values("recurring_incomes")
-    ensure_frequency_constraint("recurring_expenses", "ck_recurring_expenses_frequency")
-    ensure_frequency_constraint("recurring_incomes", "ck_recurring_incomes_frequency")
 
 
 def ensure_column(table_name: str, column_name: str) -> None:
@@ -61,47 +59,6 @@ def normalize_frequency_values(table_name: str) -> None:
     columns = {column["name"] for column in inspector.get_columns(table_name)}
     if "frequency" not in columns:
         return
-
-    with engine.begin() as connection:
-        connection.execute(
-            text(
-                f"""
-                UPDATE {table_name}
-                SET frequency = CASE frequency
-                    WHEN 'weekly' THEN 'hebdomadaire'
-                    WHEN 'monthly' THEN 'mensuel'
-                    WHEN 'yearly' THEN 'annuel'
-                    WHEN 'hebdomadaire' THEN 'hebdomadaire'
-                    WHEN 'mensuel' THEN 'mensuel'
-                    WHEN 'annuel' THEN 'annuel'
-                    ELSE 'mensuel'
-                END
-                WHERE frequency IS NULL
-                   OR frequency NOT IN ('hebdomadaire', 'mensuel', 'annuel')
-                """
-            )
-        )
-
-
-def ensure_frequency_constraint(table_name: str, constraint_name: str) -> None:
-    inspector = inspect(engine)
-    if not inspector.has_table(table_name) or engine.dialect.name == "sqlite":
-        return
-
-    constraints = {constraint["name"] for constraint in inspector.get_check_constraints(table_name)}
-    if constraint_name in constraints:
-        return
-
-    with engine.begin() as connection:
-        connection.execute(
-            text(
-                f"""
-                ALTER TABLE {table_name}
-                ADD CONSTRAINT {constraint_name}
-                CHECK (frequency IN ('hebdomadaire', 'mensuel', 'annuel'))
-                """
-            )
-        )
 
 
 @app.middleware("http")

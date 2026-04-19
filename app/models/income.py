@@ -30,4 +30,3 @@ class Income(Base):
 
     category = relationship("Category", back_populates="incomes")
     bank_account = relationship("BankAccount", back_populates="incomes")
-    recurring_income = relationship("RecurringIncome", back_populates="generated_incomes")
