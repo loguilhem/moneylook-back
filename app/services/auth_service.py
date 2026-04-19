@@ -3,14 +3,23 @@ import hashlib
 import hmac
 import secrets
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.auth_session import AuthSession
+from app.models.login_attempt import LoginAttempt
 from app.models.user import User
 
 SESSION_COOKIE_NAME = "moneylook_session"
 SESSION_IDLE_TIMEOUT = timedelta(minutes=15)
 PASSWORD_ITERATIONS = 390000
+LOGIN_MAX_FAILED_ATTEMPTS = 3
+LOGIN_LOCK_DURATION = timedelta(minutes=15)
+
+
+class LoginLockedError(Exception):
+    pass
 
 
 def utc_now() -> datetime:
@@ -19,6 +28,10 @@ def utc_now() -> datetime:
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def normalize_login_identifier(email: str) -> str:
+    return email.strip().lower()
 
 
 def hash_password(password: str) -> str:
@@ -54,10 +67,57 @@ class AuthService:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_login_attempt(self, identifier: str) -> LoginAttempt | None:
+        return self.db.query(LoginAttempt).filter(LoginAttempt.identifier == identifier).one_or_none()
+
+    def ensure_login_is_allowed(self, identifier: str) -> None:
+        if not settings.LOGIN_BRUTE_FORCE_ENABLED:
+            return
+
+        attempt = self.get_login_attempt(identifier)
+        if not attempt or not attempt.locked_until:
+            return
+
+        if attempt.locked_until > utc_now():
+            raise LoginLockedError("Too many login attempts. Try again later.")
+
+        self.db.delete(attempt)
+        self.db.commit()
+
+    def record_failed_login(self, identifier: str) -> bool:
+        if not settings.LOGIN_BRUTE_FORCE_ENABLED:
+            return False
+
+        now = utc_now()
+        attempt = self.get_login_attempt(identifier)
+        if not attempt:
+            attempt = LoginAttempt(identifier=identifier, failed_count=0)
+            self.db.add(attempt)
+
+        attempt.failed_count += 1
+        if attempt.failed_count >= LOGIN_MAX_FAILED_ATTEMPTS:
+            attempt.locked_until = now + LOGIN_LOCK_DURATION
+
+        self.db.commit()
+        return attempt.locked_until is not None and attempt.locked_until > now
+
+    def clear_failed_login(self, identifier: str) -> None:
+        attempt = self.get_login_attempt(identifier)
+        if attempt:
+            self.db.delete(attempt)
+            self.db.commit()
+
     def authenticate(self, email: str, password: str) -> User | None:
-        user = self.db.query(User).filter(User.email == email).one_or_none()
+        identifier = normalize_login_identifier(email)
+        self.ensure_login_is_allowed(identifier)
+
+        user = self.db.query(User).filter(func.lower(User.email) == identifier).one_or_none()
         if not user or not verify_password(password, user.password_hash):
+            if self.record_failed_login(identifier):
+                raise LoginLockedError("Too many login attempts. Try again later.")
             return None
+
+        self.clear_failed_login(identifier)
         return user
 
     def create_session(self, user: User) -> str:

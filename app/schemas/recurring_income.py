@@ -13,6 +13,7 @@ class RecurringIncomeBase(BaseModel):
     date_policy: DatePolicy = "same_day"
     frequency: Frequency = "monthly"
     bank_account_id: int
+    category_id: int | None = None
 
 
 class RecurringIncomeCreate(RecurringIncomeBase):
@@ -26,6 +27,7 @@ class RecurringIncomeUpdate(BaseModel):
     date_policy: DatePolicy | None = None
     frequency: Frequency | None = None
     bank_account_id: int | None = None
+    category_id: int | None = None
 
 
 class RecurringIncomeRead(RecurringIncomeBase):

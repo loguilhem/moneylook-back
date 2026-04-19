@@ -13,15 +13,27 @@ class BankAccountService:
     def get(self, bank_account_id: int) -> BankAccount | None:
         return self.db.get(BankAccount, bank_account_id)
 
+    def clear_default_accounts(self, except_id: int | None = None) -> None:
+        query = self.db.query(BankAccount).filter(BankAccount.is_default.is_(True))
+        if except_id is not None:
+            query = query.filter(BankAccount.id != except_id)
+        query.update({BankAccount.is_default: False}, synchronize_session=False)
+
     def create(self, payload: BankAccountCreate) -> BankAccount:
-        obj = BankAccount(**payload.model_dump())
+        values = payload.model_dump()
+        if values.get("is_default"):
+            self.clear_default_accounts()
+        obj = BankAccount(**values)
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
         return obj
 
     def update(self, obj: BankAccount, payload: BankAccountUpdate) -> BankAccount:
-        for field, value in payload.model_dump(exclude_unset=True).items():
+        values = payload.model_dump(exclude_unset=True)
+        if values.get("is_default"):
+            self.clear_default_accounts(except_id=obj.id)
+        for field, value in values.items():
             setattr(obj, field, value)
         self.db.commit()
         self.db.refresh(obj)

@@ -3,6 +3,10 @@ from app.models.account_type import AccountType
 from app.schemas.account_type import AccountTypeCreate, AccountTypeUpdate
 
 
+class SystemAccountTypeError(Exception):
+    pass
+
+
 class AccountTypeService:
     def __init__(self, db: Session):
         self.db = db
@@ -14,13 +18,16 @@ class AccountTypeService:
         return self.db.get(AccountType, account_type_id)
 
     def create(self, payload: AccountTypeCreate) -> AccountType:
-        obj = AccountType(**payload.model_dump())
+        obj = AccountType(**payload.model_dump(), is_system=False)
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
         return obj
 
     def update(self, obj: AccountType, payload: AccountTypeUpdate) -> AccountType:
+        if obj.is_system:
+            raise SystemAccountTypeError("System account types cannot be updated")
+
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(obj, field, value)
         self.db.commit()
@@ -28,5 +35,8 @@ class AccountTypeService:
         return obj
 
     def delete(self, obj: AccountType) -> None:
+        if obj.is_system:
+            raise SystemAccountTypeError("System account types cannot be deleted")
+
         self.db.delete(obj)
         self.db.commit()

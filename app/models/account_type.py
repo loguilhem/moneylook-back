@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String
+from sqlalchemy import Boolean, String
 from app.core.database import Base
 
 class AccountType(Base):
@@ -7,5 +7,7 @@ class AccountType(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    code: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True)
+    is_system: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     bank_accounts = relationship("BankAccount", back_populates="account_type")

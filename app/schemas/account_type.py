@@ -15,5 +15,7 @@ class AccountTypeUpdate(BaseModel):
 
 class AccountTypeRead(AccountTypeBase):
     id: int
+    code: str | None = None
+    is_system: bool = False
 
     model_config = ConfigDict(from_attributes=True)

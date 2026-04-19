@@ -4,6 +4,7 @@ from app.models.bank_account import BankAccount
 from app.models.category import Category
 from app.models.expense import Expense
 from app.models.income import Income
+from app.models.login_attempt import LoginAttempt
 from app.models.recurring_expense import RecurringExpense
 from app.models.recurring_income import RecurringIncome
 from app.models.user import User

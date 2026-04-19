@@ -13,3 +13,4 @@ class Category(Base):
     expenses = relationship("Expense", back_populates="category")
     incomes = relationship("Income", back_populates="category")
     recurring_expenses = relationship("RecurringExpense", back_populates="category")
+    recurring_incomes = relationship("RecurringIncome", back_populates="category")

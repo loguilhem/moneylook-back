@@ -39,4 +39,10 @@ class RecurringIncome(Base):
         nullable=False,
     )
 
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("categories.id"),
+        nullable=True,
+    )
+
+    category = relationship("Category", back_populates="recurring_incomes")
     bank_account = relationship("BankAccount", back_populates="recurring_incomes")
