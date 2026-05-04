@@ -77,6 +77,13 @@ def init_db() -> None:
         "id",
         "fk_recurring_incomes_category_id",
     )
+    ensure_foreign_key_column(
+        "categories",
+        "parent",
+        "categories",
+        "id",
+        "fk_categories_parent",
+    )
     migrate_recurring_schedule_columns("recurring_expenses")
     migrate_recurring_schedule_columns("recurring_incomes")
     normalize_frequency_values("recurring_expenses")

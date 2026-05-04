@@ -27,6 +27,7 @@ class CategoryBase(BaseModel):
     name: str = Field(..., max_length=120)
     icon_html: str = Field(..., max_length=255)
     color: str = Field(..., max_length=20)
+    parent: int | None = None
 
     @field_validator("icon_html")
     @classmethod
@@ -42,6 +43,7 @@ class CategoryUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=120)
     icon_html: str | None = Field(default=None, max_length=255)
     color: str | None = Field(default=None, max_length=20)
+    parent: int | None = None
 
     @field_validator("icon_html")
     @classmethod

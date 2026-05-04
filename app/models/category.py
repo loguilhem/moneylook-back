@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String
+from sqlalchemy import ForeignKey, String
 from app.core.database import Base
 
 class Category(Base):
@@ -9,6 +9,7 @@ class Category(Base):
     name: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     icon_html: Mapped[str] = mapped_column(String(255), nullable=False)
     color: Mapped[str] = mapped_column(String(20), nullable=False)
+    parent: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True)
 
     expenses = relationship("Expense", back_populates="category")
     incomes = relationship("Income", back_populates="category")
