@@ -201,7 +201,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    location ~ ^/(auth|account-types|bank-accounts|categories|expenses|incomes|recurring-expenses|recurring-incomes|stats)(/|$) {
+    location ~ ^/(auth|account-types|bank-accounts|categories|expenses|incomes|recurring-expenses|recurring-incomes|stats)(/|$)|^/llm/(settings|chat|test)(/|$) {
         proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;

@@ -10,6 +10,7 @@ from app.api.bank_accounts import register_bank_account_routes
 from app.api.categories import register_category_routes
 from app.api.expenses import register_expense_routes
 from app.api.incomes import register_income_routes
+from app.api.llm import register_llm_routes
 from app.api.recurring_expenses import register_recurring_expense_routes
 from app.api.recurring_incomes import register_recurring_income_routes
 from app.api.stats import register_stats_routes
@@ -308,6 +309,7 @@ register_bank_account_routes(app)
 register_category_routes(app)
 register_expense_routes(app)
 register_income_routes(app)
+register_llm_routes(app)
 register_recurring_expense_routes(app)
 register_recurring_income_routes(app)
 register_stats_routes(app)
