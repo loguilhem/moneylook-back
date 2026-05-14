@@ -186,6 +186,17 @@ server {
     root /var/www/moneylook;
     index index.html;
 
+    location = /manifest.webmanifest {
+        default_type application/manifest+json;
+        try_files $uri =404;
+    }
+
+    location = /sw.js {
+        add_header Service-Worker-Allowed /;
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
     }
